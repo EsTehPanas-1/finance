@@ -1,6 +1,6 @@
 // Makes the site installable and opens it fast. Always tries the network first
 // so updates show up straight away; falls back to the saved copy when offline.
-const CACHE = 'finance-site-v1';
+const CACHE = 'finance-site-v2';
 const SHELL = ['./', 'index.html', 'config.js', 'manifest.webmanifest', 'icon-192.png', 'icon-512.png', 'favicon.png'];
 
 self.addEventListener('install', (e) => {

@@ -25,7 +25,7 @@
       --accent: #4fb89d; --accent-ink: #06201a; --danger: #f2877f; }
   }
   * { box-sizing: border-box; -webkit-tap-highlight-color: transparent; }
-  html, body { height: 100%; margin: 0; }
+  html, body { height: 100%; margin: 0; overscroll-behavior: none; }
   body { background: var(--bg); color: var(--ink); font: 500 16px/1.45 var(--font); overflow: hidden;
     display: grid; grid-template-rows: auto 1fr; }
   button, input { font: inherit; color: inherit; }
@@ -48,7 +48,7 @@
     display: grid; place-items: center; padding: 0; }
 
   /* Pages: each app stays loaded, so switching is instant */
-  main { position: relative; min-height: 0; }
+  main { position: relative; min-height: 0; overflow: hidden; }
   .page { position: absolute; inset: 0; visibility: hidden; }
   .page.on { visibility: visible; }
   .page iframe { width: 100%; height: 100%; border: 0; display: block; background: var(--bg); }
@@ -68,7 +68,12 @@
   .err { color: var(--danger); font-size: 13px; min-height: 18px; margin: 8px 0 0; }
   .spin { width: 28px; height: 28px; border-radius: 50%; border: 3px solid var(--line); border-top-color: var(--accent); margin: 0 auto 12px; animation: spin 0.9s linear infinite; }
   @keyframes spin { to { transform: rotate(360deg); } }
-  @media (prefers-reduced-motion: reduce) { * { transition: none !important; animation-duration: 3s !important; } }
+  /* Swiping between the two apps slides the new page in */
+  .page.on.from-right { animation: fromR .26s cubic-bezier(.2,.8,.2,1); }
+  .page.on.from-left { animation: fromL .26s cubic-bezier(.2,.8,.2,1); }
+  @keyframes fromR { from { transform: translateX(30%); opacity: 0; } }
+  @keyframes fromL { from { transform: translateX(-30%); opacity: 0; } }
+  @media (prefers-reduced-motion: reduce) { * { transition: none !important; } .page.on { animation: none !important; } .spin { animation-duration: 3s; } }
 
   /* Settings sheet */
   #settings { position: fixed; inset: 0; background: rgba(0,0,0,.45); display: none; align-items: flex-end; justify-content: center; z-index: 10; }
@@ -76,6 +81,35 @@
   #settings .card { border-radius: 22px 22px 0 0; max-width: 480px; padding-bottom: calc(24px + env(safe-area-inset-bottom)); text-align: left; }
   #settings label { display: block; font-size: 13px; font-weight: 600; color: var(--muted); margin: 16px 0 8px; }
   #settings h2 { text-align: center; }
+  #settings .hint { color: var(--muted); font-size: 13px; margin: 0; }
+  #settings select { width: 100%; height: 44px; border: 1px solid var(--line); background: var(--soft); border-radius: 12px; padding: 0 12px; font: inherit; font-weight: 600; color: var(--ink); }
+  .lockrow { display: flex; align-items: center; justify-content: space-between; gap: 12px; background: var(--soft); border: 1px solid var(--line); border-radius: 12px; padding: 10px 12px; font-weight: 700; }
+  .lockrow small { color: var(--muted); font-weight: 600; }
+  .btns.three { grid-template-columns: 1fr 1fr; }
+  .btn:disabled { opacity: .5; }
+
+  /* Lock screen */
+  #lock { position: fixed; inset: 0; z-index: 20; background: var(--bg); display: none; flex-direction: column; align-items: center;
+    justify-content: center; padding: calc(24px + env(safe-area-inset-top)) 16px calc(24px + env(safe-area-inset-bottom)); overflow: auto; }
+  #lock.show { display: flex; }
+  #lock img { width: 64px; height: 64px; border-radius: 16px; margin-bottom: 16px; }
+  #lock h2 { font-size: 19px; margin: 0 0 6px; text-align: center; }
+  #lock .msg { color: var(--muted); font-size: 14px; min-height: 21px; margin: 0 0 20px; text-align: center; max-width: 320px; }
+  #lock .msg.bad { color: var(--danger); font-weight: 600; }
+  .dots { display: flex; gap: 14px; height: 16px; margin-bottom: 32px; }
+  .dots i { width: 14px; height: 14px; border-radius: 50%; border: 2px solid var(--muted); transition: background-color .12s, border-color .12s; }
+  .dots i.on { background: var(--ink); border-color: var(--ink); }
+  .dots.shake { animation: shake .36s; }
+  @keyframes shake { 20%, 60% { transform: translateX(-8px); } 40%, 80% { transform: translateX(8px); } }
+  .pad { display: grid; grid-template-columns: repeat(3, 72px); gap: 14px 28px; }
+  .pad button { width: 72px; height: 72px; border-radius: 50%; border: 0; background: var(--card); color: var(--ink);
+    font-size: 26px; font-weight: 700; display: grid; place-items: center; padding: 0; transition: background-color .12s; }
+  .pad button:active { background: var(--line); }
+  .pad button.plain { background: none; color: var(--muted); }
+  .pad button.ok { background: var(--accent); color: var(--accent-ink); }
+  .pad button:disabled { visibility: hidden; }
+  #lock .under { margin-top: 24px; background: none; border: 0; color: var(--muted); font-weight: 600; font-size: 14px; padding: 8px 12px; }
+  #lock .help { color: var(--muted); font-size: 13px; text-align: center; max-width: 320px; margin: 16px 0 0; }
   #settings .open { font-size: 13px; font-weight: 600; color: var(--accent); text-decoration: none; display: inline-block; margin-top: 6px; }
 </style>
 </head>
@@ -88,6 +122,7 @@
 </div></div>
 <main id="pages"></main>
 <div id="settings" role="dialog" aria-modal="true" aria-label="Settings"><div class="card" id="settingsCard"></div></div>
+<div id="lock" role="dialog" aria-modal="true" aria-label="Locked"></div>
 
 <script src="config.js"></script>
 <script>
@@ -128,13 +163,17 @@ function buildTabs() {
 
 function go(id) {
   if (!APPS.some((a) => a.id === id)) id = APPS[0].id;
+  const from = APPS.findIndex((a) => a.id === current), to = APPS.findIndex((a) => a.id === id);
   current = id;
   store.last = id; writeStore(store);
   if (location.hash !== '#' + id) history.replaceState(null, '', '#' + id);
   buildTabs();
   APPS.forEach((app) => {
     ensurePage(app);
-    state[app.id].page.classList.toggle('on', app.id === id);
+    const pg = state[app.id].page;
+    pg.classList.remove('from-left', 'from-right');
+    pg.classList.toggle('on', app.id === id);
+    if (app.id === id && from >= 0 && from !== to) { void pg.offsetWidth; pg.classList.add(to > from ? 'from-right' : 'from-left'); }
   });
   start(APPS.find((a) => a.id === id));
   // Load the other page quietly once this one is up, so switching later is instant.
@@ -181,6 +220,12 @@ window.addEventListener('message', (ev) => {
   if (!d || typeof d !== 'object' || !d.financeApp) return;
   const app = APPS.find((a) => state[a.id] && state[a.id].frame && containsWindow(state[a.id].frame.contentWindow, ev.source, 0));
   if (!app) return;
+  if (d.financeApp === 'swipe') {
+    if (locked || app.id !== current) return;
+    const j = APPS.findIndex((a) => a.id === current) + (d.dir === 'left' ? 1 : -1);
+    if (j >= 0 && j < APPS.length) go(APPS[j].id);
+    return;
+  }
   const st = state[app.id];
   st.status = d.financeApp === 'ready' ? 'ready' : (st.status === 'ready' ? 'ready' : 'loading');
   clearTimeout(st.timer);
@@ -239,6 +284,7 @@ function openSettings() {
         validUrl(urlOf(app)) ? h('a', { class: 'open', href: urlOf(app).trim(), target: '_blank', rel: 'noopener' }, 'Open ' + app.name + ' directly ↗') : null];
     }),
     err,
+    lockSettings(),
     h('div', { class: 'btns' },
       h('button', { class: 'btn', onclick: closeSettings }, 'Close'),
       h('button', { class: 'btn primary', onclick: () => {
@@ -261,6 +307,161 @@ function closeSettings() { $('#settings').classList.remove('show'); }
 $('#gearBtn').addEventListener('click', openSettings);
 $('#settings').addEventListener('click', (e) => { if (e.target.id === 'settings') closeSettings(); });
 document.addEventListener('keydown', (e) => { if (e.key === 'Escape') closeSettings(); });
+
+// ---------- App lock ----------
+// A PIN (and optionally your fingerprint) when the app opens. It is a lock on this phone's copy
+// of the site; your sheets stay protected by your Google account either way.
+const LOCK_AFTER = [[0, 'Immediately'], [60, 'After 1 minute'], [300, 'After 5 minutes'], [900, 'After 15 minutes']];
+const lockCfg = () => store.lock || null;
+const enc = new TextEncoder();
+const b64 = (buf) => btoa(String.fromCharCode(...new Uint8Array(buf)));
+const unb64 = (str) => Uint8Array.from(atob(str), (c) => c.charCodeAt(0));
+const rand = (n) => crypto.getRandomValues(new Uint8Array(n));
+async function pinHash(pin, salt) {
+  const key = await crypto.subtle.importKey('raw', enc.encode(pin), 'PBKDF2', false, ['deriveBits']);
+  return b64(await crypto.subtle.deriveBits({ name: 'PBKDF2', salt: unb64(salt), iterations: 150000, hash: 'SHA-256' }, key, 256));
+}
+async function bioAvailable() {
+  try { return !!(window.PublicKeyCredential && await PublicKeyCredential.isUserVerifyingPlatformAuthenticatorAvailable()); } catch (e) { return false; }
+}
+let locked = false, hiddenAt = 0, bioBusy = false, unlockedAt = 0;
+const L = { mode: 'unlock', entry: '', first: '', fails: 0, until: 0, msg: '', bad: false, help: false, onDone: null };
+const ICON = {
+  back: 'M21 6H9l-6 6 6 6h12a1 1 0 0 0 1-1V7a1 1 0 0 0-1-1zM16 10l-4 4M12 10l4 4',
+  ok: 'M5 12.5l4.5 4.5L19 7.5',
+  finger: 'M12 11v3a8 8 0 0 1-1 4M8 13.5V11a4 4 0 0 1 8 0v1M16 15.5c0 1.4-.2 2.8-.6 4M5.5 16c.3-1.2.5-2.5.5-4v-1a6 6 0 0 1 10.5-4M18 9.5c.3.8.5 1.6.5 2.5v1M9 20.5c.6-1.2 1-2.6 1-4'
+};
+function icon(d, size) {
+  const sp = document.createElement('span');
+  sp.innerHTML = '<svg viewBox="0 0 24 24" width="' + (size || 26) + '" height="' + (size || 26) + '" aria-hidden="true" style="display:block"><path d="' + d +
+    '" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/></svg>';
+  return sp.firstChild;
+}
+function setInert(v) { document.querySelector('.bar').inert = v; $('#pages').inert = v; }
+function showLock(mode, onDone) {
+  Object.assign(L, { mode, entry: '', first: '', msg: '', bad: false, help: false, onDone: onDone || null });
+  locked = mode === 'unlock';
+  closeSettings();
+  $('#lock').classList.add('show'); setInert(true);
+  renderLock();
+  if (mode === 'unlock' && lockCfg() && lockCfg().cred && !document.hidden) tryBio();
+}
+function hideLock() {
+  $('#lock').classList.remove('show'); setInert(false);
+  locked = false; unlockedAt = Date.now();
+  const done = L.onDone; L.onDone = null;
+  if (done) done();
+}
+function renderLock(shake) {
+  const cfg = lockCfg();
+  const setting = L.mode !== 'unlock';
+  const title = L.mode === 'set1' ? 'Choose a PIN' : L.mode === 'set2' ? 'Enter the PIN again' : 'Finance is locked';
+  const msg = L.msg || (L.mode === 'set1' ? '4 to 6 digits' : L.mode === 'set2' ? 'To make sure it\'s right' : 'Enter your PIN');
+  const n = setting ? Math.max(4, L.entry.length) : cfg.len;
+  const dots = h('div', { class: 'dots' + (shake ? ' shake' : ''), 'aria-label': L.entry.length + ' digits entered' },
+    Array.from({ length: n }, (_, i) => h('i', { class: i < L.entry.length ? 'on' : '' })));
+  const key = (d) => h('button', { type: 'button', 'aria-label': d, onclick: () => press(d) }, d);
+  const waiting = Date.now() < L.until;
+  let left;
+  if (setting) left = h('button', { type: 'button', class: 'ok', 'aria-label': 'OK', disabled: L.entry.length < 4, onclick: submitSet }, icon(ICON.ok));
+  else left = h('button', { type: 'button', class: 'plain', 'aria-label': 'Use fingerprint', disabled: !(cfg && cfg.cred), onclick: tryBio }, icon(ICON.finger, 30));
+  const pad = h('div', { class: 'pad' }, ['1', '2', '3', '4', '5', '6', '7', '8', '9'].map(key), left, key('0'),
+    h('button', { type: 'button', class: 'plain', 'aria-label': 'Delete', onclick: () => { L.entry = L.entry.slice(0, -1); renderLock(); } }, icon(ICON.back)));
+  if (waiting) pad.querySelectorAll('button').forEach((b) => { b.disabled = true; b.style.visibility = 'visible'; b.style.opacity = '.4'; });
+  const under = setting
+    ? h('button', { type: 'button', class: 'under', onclick: () => { hideLock(); } }, 'Cancel')
+    : h('button', { type: 'button', class: 'under', onclick: () => { L.help = !L.help; renderLock(); } }, 'Forgot PIN?');
+  $('#lock').replaceChildren(...[
+    h('img', { src: 'icon-192.png', alt: '' }), h('h2', null, title), h('p', { class: 'msg' + (L.bad ? ' bad' : '') }, msg),
+    dots, pad, under,
+    L.help ? h('p', { class: 'help' }, 'To remove the lock, clear this site\'s data in Chrome: ⋮ → Settings → Site settings → All sites → ' + location.hostname +
+      ' → Delete data. Your sheets aren\'t affected; you\'ll just need to set the lock up again.') : null].filter(Boolean));
+}
+async function press(d) {
+  if (Date.now() < L.until || L.entry.length >= 6) return;
+  L.entry += d; L.msg = ''; L.bad = false;
+  renderLock();
+  const cfg = lockCfg();
+  if (L.mode === 'unlock' && cfg && L.entry.length === cfg.len) {
+    const tryPin = L.entry;
+    if (await pinHash(tryPin, cfg.salt) === cfg.hash) { L.fails = 0; hideLock(); return; }
+    L.fails++; L.entry = ''; L.bad = true;
+    if (L.fails >= 5) {
+      L.fails = 0; L.until = Date.now() + 30000; L.msg = 'Too many tries. Wait 30 seconds.';
+      setTimeout(() => { L.msg = ''; L.bad = false; if ($('#lock').classList.contains('show')) renderLock(); }, 30000);
+    } else L.msg = 'Wrong PIN';
+    renderLock(true);
+  }
+}
+async function submitSet() {
+  if (L.entry.length < 4) return;
+  if (L.mode === 'set1') { L.first = L.entry; L.entry = ''; L.mode = 'set2'; L.msg = ''; renderLock(); return; }
+  if (L.entry !== L.first) { L.mode = 'set1'; L.entry = ''; L.first = ''; L.msg = 'The PINs didn\'t match. Choose one again.'; L.bad = true; renderLock(true); return; }
+  const salt = b64(rand(16));
+  const old = lockCfg() || {};
+  store.lock = { hash: await pinHash(L.entry, salt), salt, len: L.entry.length, after: old.after != null ? old.after : 60, cred: old.cred || null };
+  writeStore(store);
+  hideLock();
+}
+async function tryBio() {
+  const cfg = lockCfg();
+  if (!cfg || !cfg.cred || bioBusy) return;
+  bioBusy = true;
+  try {
+    await navigator.credentials.get({ publicKey: { challenge: rand(32), allowCredentials: [{ type: 'public-key', id: unb64(cfg.cred) }],
+      userVerification: 'required', timeout: 60000 } });
+    L.fails = 0; hideLock();
+  } catch (e) { /* cancelled: the PIN still works */ }
+  bioBusy = false; unlockedAt = Date.now();
+}
+async function enrolBio() {
+  try {
+    const cred = await navigator.credentials.create({ publicKey: {
+      challenge: rand(32), rp: { name: 'Finance' },
+      user: { id: rand(16), name: 'finance', displayName: 'Finance' },
+      pubKeyCredParams: [{ type: 'public-key', alg: -7 }, { type: 'public-key', alg: -257 }],
+      authenticatorSelection: { authenticatorAttachment: 'platform', userVerification: 'required', residentKey: 'discouraged' },
+      timeout: 60000 } });
+    store.lock.cred = b64(cred.rawId); writeStore(store);
+  } catch (e) { /* cancelled */ }
+  unlockedAt = Date.now();
+  openSettings();
+}
+function lockSettings() {
+  const cfg = lockCfg();
+  if (!cfg) {
+    return [h('label', null, 'App lock'),
+      h('p', { class: 'hint' }, 'Ask for a PIN (or your fingerprint) when Finance opens.'),
+      h('div', { class: 'btns one' }, h('button', { class: 'btn', onclick: () => showLock('set1', openSettings) }, 'Set up a PIN'))];
+  }
+  const after = h('select', { 'aria-label': 'Lock again', onchange: (e) => { store.lock.after = Number(e.target.value); writeStore(store); } },
+    LOCK_AFTER.map(([v, t]) => h('option', { value: v, selected: v === cfg.after }, 'Lock again: ' + t.toLowerCase())));
+  const bioBtn = h('button', { class: 'btn', onclick: () => {
+    if (cfg.cred) { store.lock.cred = null; writeStore(store); openSettings(); } else enrolBio();
+  } }, cfg.cred ? 'Stop using fingerprint' : 'Use fingerprint too');
+  bioAvailable().then((ok) => { if (!ok && !cfg.cred) { bioBtn.disabled = true; bioBtn.textContent = 'No fingerprint on this device'; } });
+  return [h('label', null, 'App lock'),
+    h('div', { class: 'lockrow' }, h('span', null, 'On'), h('small', null, cfg.len + '-digit PIN' + (cfg.cred ? ' + fingerprint' : ''))),
+    h('div', { style: 'margin-top:8px' }, after),
+    h('div', { class: 'btns' }, h('button', { class: 'btn', onclick: () => showLock('set1', openSettings) }, 'Change PIN'),
+      h('button', { class: 'btn', style: 'color:var(--danger)', onclick: () => { delete store.lock; writeStore(store); openSettings(); } }, 'Turn off')),
+    h('div', { class: 'btns one' }, bioBtn)];
+}
+document.addEventListener('visibilitychange', () => {
+  const cfg = lockCfg();
+  if (!cfg || bioBusy) return;
+  if (document.hidden) { if (!locked) hiddenAt = Date.now(); return; }
+  if (locked) { if (cfg.cred) tryBio(); return; }
+  if (Date.now() - unlockedAt < 2000) return;   // the fingerprint prompt itself can hide the page briefly
+  if (hiddenAt && Date.now() - hiddenAt >= (cfg.after || 0) * 1000) showLock('unlock');
+});
+document.addEventListener('keydown', (e) => {
+  if (!$('#lock').classList.contains('show')) return;
+  if (/^\d$/.test(e.key)) press(e.key);
+  else if (e.key === 'Backspace') { L.entry = L.entry.slice(0, -1); renderLock(); }
+  else if (e.key === 'Enter' && L.mode !== 'unlock') submitSet();
+});
+if (lockCfg()) showLock('unlock');
 
 window.addEventListener('hashchange', () => { const id = location.hash.slice(1); if (id && id !== current) go(id); });
 go(location.hash.slice(1) || store.last || (APPS[0] && APPS[0].id));
