@@ -88,6 +88,39 @@
   .btns.three { grid-template-columns: 1fr 1fr; }
   .btn:disabled { opacity: .5; }
 
+  /* Offline entry */
+  .cover.off { place-items: start center; }
+  .off .card { text-align: left; }
+  .off .card h2, .off .card > p { text-align: center; }
+  .off label { display: block; font-size: 13px; font-weight: 600; color: var(--muted); margin: 14px 0 8px; }
+  .ochips { display: grid; gap: 8px; }
+  .ochip { min-width: 0; height: 42px; padding: 0 6px; border: 1px solid var(--line); background: var(--soft); border-radius: 12px;
+    font-size: 14px; font-weight: 600; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; color: var(--ink); }
+  .ochip.on { background: var(--accent); border-color: var(--accent); color: var(--accent-ink); }
+  .oquick { display: flex; flex-wrap: wrap; gap: 8px; }
+  .oquick button { height: 36px; padding: 0 12px; border: 1px solid var(--line); background: var(--soft); border-radius: 999px; font-size: 14px; font-weight: 600; color: var(--ink); }
+  .oquick span { color: var(--muted); margin-left: 6px; }
+  .off input.amt { height: 60px; font-size: 28px; font-weight: 800; text-align: center; }
+  .off .calc { text-align: center; color: var(--muted); font-size: 13px; font-weight: 700; margin-top: 6px; }
+  .off .calc:empty { display: none; }
+  .plist { margin-top: 20px; border-top: 1px solid var(--line); padding-top: 8px; }
+  .plist h3 { font-size: 13px; color: var(--muted); margin: 8px 0; text-align: center; }
+  .pitem { display: grid; grid-template-columns: 1fr auto 32px; gap: 2px 8px; align-items: center; padding: 8px 0; font-size: 14px; font-weight: 600; }
+  .pitem + .pitem { border-top: 1px dashed var(--line); }
+  .pitem small { grid-column: 1 / 3; color: var(--muted); font-size: 12px; }
+  .pitem small.bad { color: var(--danger); }
+  .pitem button { grid-column: 3; grid-row: 1 / 3; width: 32px; height: 32px; border: 0; background: none; color: var(--muted); font-size: 20px; border-radius: 8px; }
+  #settings .plist { margin-top: 0; border-top: 0; padding-top: 0; }
+  #settings .plist h3 { display: none; }
+  #pend { display: none; max-width: 480px; margin: 8px auto 0; width: 100%; height: 32px; border: 1px solid var(--line); background: var(--card);
+    border-radius: 999px; font-size: 13px; font-weight: 700; color: var(--muted); align-items: center; justify-content: center; gap: 6px; }
+  #pend.show { display: flex; }
+  #pend.bad { color: var(--danger); border-color: var(--danger); }
+  #stoast { position: fixed; left: 50%; bottom: calc(24px + env(safe-area-inset-bottom)); transform: translateX(-50%); background: var(--ink); color: var(--bg);
+    padding: 10px 16px; border-radius: 12px; font-weight: 600; font-size: 14px; opacity: 0; transition: opacity .2s; pointer-events: none; z-index: 15;
+    max-width: calc(100% - 32px); text-align: center; }
+  #stoast.show { opacity: 1; }
+
   /* Lock screen */
   #lock { position: fixed; inset: 0; z-index: 20; background: var(--bg); display: none; flex-direction: column; align-items: center;
     justify-content: center; padding: calc(24px + env(safe-area-inset-top)) 16px calc(24px + env(safe-area-inset-bottom)); overflow: auto; }
@@ -119,8 +152,9 @@
   <button class="gear" id="gearBtn" aria-label="Settings" title="Settings">
     <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><circle cx="12" cy="12" r="3"/><path d="M19.4 15a1.65 1.65 0 0 0 .33 1.82l.06.06a2 2 0 1 1-2.83 2.83l-.06-.06a1.65 1.65 0 0 0-1.82-.33 1.65 1.65 0 0 0-1 1.51V21a2 2 0 1 1-4 0v-.09A1.65 1.65 0 0 0 9 19.4a1.65 1.65 0 0 0-1.82.33l-.06.06a2 2 0 1 1-2.83-2.83l.06-.06A1.65 1.65 0 0 0 4.68 15a1.65 1.65 0 0 0-1.51-1H3a2 2 0 1 1 0-4h.09A1.65 1.65 0 0 0 4.6 9a1.65 1.65 0 0 0-.33-1.82l-.06-.06a2 2 0 1 1 2.83-2.83l.06.06A1.65 1.65 0 0 0 9 4.68a1.65 1.65 0 0 0 1-1.51V3a2 2 0 1 1 4 0v.09a1.65 1.65 0 0 0 1 1.51 1.65 1.65 0 0 0 1.82-.33l.06-.06a2 2 0 1 1 2.83 2.83l-.06.06A1.65 1.65 0 0 0 19.4 9a1.65 1.65 0 0 0 1.51 1H21a2 2 0 1 1 0 4h-.09a1.65 1.65 0 0 0-1.51 1z"/></svg>
   </button>
-</div></div>
+</div><button id="pend" type="button"></button></div>
 <main id="pages"></main>
+<div id="stoast" role="status"></div>
 <div id="settings" role="dialog" aria-modal="true" aria-label="Settings"><div class="card" id="settingsCard"></div></div>
 <div id="lock" role="dialog" aria-modal="true" aria-label="Locked"></div>
 
@@ -192,7 +226,9 @@ function start(app, force) {
   const st = state[app.id];
   const url = urlOf(app);
   if (!validUrl(url)) { showSetup(app); return; }
+  if (!online()) { showOffline(app); return; }
   if (st.frame && !force) return;
+  st.offline = false;
   st.page.replaceChildren();
   st.status = 'none';
   const frame = h('iframe', { src: url.trim(), title: app.name, allow: 'clipboard-write', referrerpolicy: 'no-referrer-when-downgrade' });
@@ -203,7 +239,7 @@ function start(app, force) {
   // The app itself shows "Loading your sheet…"; keep our cover only briefly in case Google shows nothing.
   frame.addEventListener('load', () => { setTimeout(() => { if (st.cover === cover && st.status !== 'none') hideCover(st); }, 0); });
   clearTimeout(st.timer);
-  st.timer = setTimeout(() => { if (st.frame === frame && st.status === 'none') showProblem(app); }, LOAD_TIMEOUT);
+  st.timer = setTimeout(() => { if (st.frame === frame && st.status === 'none') { if (online()) showProblem(app); else showOffline(app); } }, LOAD_TIMEOUT);
 }
 function hideCover(st) { if (st.cover) { st.cover.remove(); st.cover = null; } }
 
@@ -226,6 +262,7 @@ window.addEventListener('message', (ev) => {
     if (j >= 0 && j < APPS.length) go(APPS[j].id);
     return;
   }
+  if (onAppMessage(app, d, ev.source)) return;
   const st = state[app.id];
   st.status = d.financeApp === 'ready' ? 'ready' : (st.status === 'ready' ? 'ready' : 'loading');
   clearTimeout(st.timer);
@@ -272,11 +309,177 @@ function showProblem(app) {
   st.page.append(st.cover);
 }
 
+// ---------- Offline entry ----------
+// With no signal Google's pages can't open, so the site shows its own small form. Entries wait on
+// this phone and are handed to the app (which writes them to your sheet) once you're back online.
+store.meta = store.meta || {};
+store.pending = store.pending || [];
+store.pending.forEach((x) => { x.sent = false; });   // anything not confirmed last time is sent again (the app skips duplicates)
+const OF = {};   // form state per app
+const online = () => navigator.onLine !== false;
+function stoast(msg) {
+  const t = $('#stoast'); t.textContent = msg; t.className = 'show';
+  clearTimeout(stoast.t); stoast.t = setTimeout(() => { t.className = ''; }, 2400);
+}
+function todayISO() { const d = new Date(); return d.getFullYear() + '-' + String(d.getMonth() + 1).padStart(2, '0') + '-' + String(d.getDate()).padStart(2, '0'); }
+function parseAmt(raw, cur) {
+  let x = String(raw || '').trim().replace(/[\s$]/g, '').replace(/^(HK|HKD|Rp|IDR)/i, '');
+  const mult = /(k|rb|ribu)$/i.test(x) ? 1e3 : /(jt|juta)$/i.test(x) ? 1e6 : 1;
+  x = x.replace(/(k|rb|ribu|jt|juta)$/i, '');
+  if (mult > 1) { if (!/^\d+([.,]\d+)?$/.test(x)) return NaN; return Math.round(parseFloat(x.replace(',', '.')) * mult * 100) / 100; }
+  if (cur === 'IDR' && /^\d{1,3}([.,]\d{3})+$/.test(x)) return Number(x.replace(/[.,]/g, ''));
+  if (x.includes(',') && x.includes('.')) x = x.replace(/,/g, '');
+  else if (/,\d{1,2}$/.test(x)) x = x.replace(',', '.');
+  else x = x.replace(/,/g, '');
+  if (!/^\d+(\.\d{1,2})?$/.test(x) && !/^\.\d{1,2}$/.test(x)) return NaN;
+  return Math.round(parseFloat(x) * 100) / 100;
+}
+const hasOp = (raw) => /[+\-*/×÷xX]/.test(String(raw || '').trim().slice(1));
+function calcAmt(raw, cur) {
+  if (!hasOp(raw)) return parseAmt(raw, cur);
+  const str = String(raw).replace(/\s/g, '').replace(/[×xX]/g, '*').replace(/÷/g, '/');
+  if (/[+\-*/]$/.test(str)) return NaN;
+  const parts = str.split(/([+\-*/])/), nums = [], ops = [];
+  for (let i = 0; i < parts.length; i++) { if (i % 2) ops.push(parts[i]); else { const n = parseAmt(parts[i], cur); if (!(n >= 0)) return NaN; nums.push(n); } }
+  const terms = [nums[0]], signs = [];
+  ops.forEach((op, i) => { const n = nums[i + 1]; if (op === '*') terms[terms.length - 1] *= n; else if (op === '/') terms[terms.length - 1] = n ? terms[terms.length - 1] / n : NaN; else { signs.push(op); terms.push(n); } });
+  let r = terms[0]; signs.forEach((op, i) => { r = op === '+' ? r + terms[i + 1] : r - terms[i + 1]; });
+  return Number.isFinite(r) ? (cur === 'IDR' ? Math.round(r) : Math.round(r * 100) / 100) : NaN;
+}
+function fmt(n, cur) {
+  const x = Number(n || 0);
+  if (cur === 'IDR') return 'Rp' + Math.round(x).toLocaleString('en-US');
+  return (cur === 'HKD' ? 'HK$' : '$') + x.toLocaleString('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 2 });
+}
+function ochips(opts, value, pick) {
+  const cols = opts.length > 3 ? (opts.length % 3 === 0 ? 3 : 2) : opts.length;
+  return h('div', { class: 'ochips', style: 'grid-template-columns:repeat(' + cols + ',1fr)' }, opts.map((o) =>
+    h('button', { type: 'button', class: 'ochip' + (o === value ? ' on' : ''), 'aria-pressed': String(o === value), onclick: () => pick(o) }, o)));
+}
+function showOffline(app) {
+  const st = state[app.id];
+  st.offline = true; st.frame = null; st.status = 'none'; clearTimeout(st.timer);
+  const meta = store.meta[app.id];
+  const card = h('div', { class: 'card' }, h('h2', null, 'You’re offline'));
+  if (!meta) {
+    card.append(h('p', null, 'Open ' + app.name + ' once while you’re online (with the latest Index file), and after that you can add expenses here without a signal.'));
+  } else {
+    const f = OF[app.id] = OF[app.id] || { kind: 'expense', amount: '', info: '', date: todayISO(), category: meta.defaults.category,
+      types: { expense: meta.defaults.expense, income: meta.defaults.income }, currency: meta.defaults.currency || (meta.currencies ? meta.currencies[0] : null) };
+    const opts = meta.options[f.kind];
+    const cur = meta.currencies ? f.currency : meta.base;
+    const redraw = () => showOffline(app);
+    card.append(h('p', null, 'Add it here. It goes into your sheet the next time you’re online.'));
+    card.append(h('label', null, 'Add'), ochips(['Expense', 'Income'], f.kind === 'expense' ? 'Expense' : 'Income', (k) => { f.kind = k.toLowerCase(); redraw(); }));
+    if (f.kind === 'expense' && meta.quick && meta.quick.length) {
+      card.append(h('label', null, 'Quick add'), h('div', { class: 'oquick' }, meta.quick.map((q) => h('button', { type: 'button', onclick: () => {
+        f.info = q.info; f.amount = String(q.amount);
+        if (opts.category && opts.category.includes(q.category)) f.category = q.category;
+        if (opts.type.includes(q.type)) f.types.expense = q.type;
+        if (q.currency && meta.currencies && meta.currencies.includes(q.currency)) f.currency = q.currency;
+        redraw();
+      } }, q.info, h('span', null, fmt(q.amount, q.currency || meta.base))))));
+    }
+    if (meta.currencies) card.append(h('label', null, 'Currency'), ochips(meta.currencies, f.currency, (c) => { f.currency = c; redraw(); }));
+    const calc = h('div', { class: 'calc' });
+    const showCalc = () => { const v = calcAmt(f.amount, cur); calc.textContent = hasOp(f.amount) && v >= 0 ? '= ' + fmt(v, cur) : ''; };
+    const amt = h('input', { class: 'amt', type: 'text', inputmode: 'decimal', autocomplete: 'off', placeholder: '0', value: f.amount, 'aria-label': 'Amount',
+      oninput: (e) => { f.amount = e.target.value; showCalc(); }, onkeydown: (e) => { if (e.key === 'Enter') { e.preventDefault(); info.focus(); } } });
+    const info = h('input', { type: 'text', autocomplete: 'off', placeholder: 'Description', value: f.info, 'aria-label': 'Description', enterkeyhint: 'done',
+      oninput: (e) => { f.info = e.target.value; }, onkeydown: (e) => { if (e.key === 'Enter') { e.preventDefault(); saveOffline(app); } } });
+    showCalc();
+    card.append(h('label', null, 'Amount'), amt, calc, h('label', null, 'Description'), info);
+    if (f.kind === 'expense' && opts.category) card.append(h('label', null, 'Category'), ochips(opts.category, f.category, (c) => { f.category = c; redraw(); }));
+    card.append(h('label', null, 'Type'), ochips(opts.type, f.types[f.kind], (t) => { f.types[f.kind] = t; redraw(); }));
+    card.append(h('label', null, 'Date'), h('input', { type: 'date', value: f.date, 'aria-label': 'Date', onchange: (e) => { f.date = e.target.value; } }));
+    card.append(h('div', { class: 'btns one' }, h('button', { class: 'btn primary', onclick: () => saveOffline(app) }, 'Save on this phone')));
+  }
+  const mine = store.pending.filter((x) => x.app === app.id);
+  if (mine.length) card.append(pendingList(mine));
+  card.append(h('div', { class: 'btns one' }, h('button', { class: 'btn', onclick: () => { if (online()) start(app, true); else stoast('Still no connection'); } }, 'Try connecting again')));
+  st.page.replaceChildren(h('div', { class: 'cover off' }, card));
+}
+function pendingList(items) {
+  return h('div', { class: 'plist' }, h('h3', null, items.length + ' waiting to go into your sheet'), items.map((x) => h('div', { class: 'pitem' },
+    h('span', null, x.e.info), h('b', null, fmt(x.e.amount, x.e.currency || (store.meta[x.app] || {}).base)),
+    h('small', { class: x.error ? 'bad' : '' }, x.error ? x.error : (x.key === 'income' ? 'Income' : 'Expense') + ' · ' + x.e.date),
+    h('button', { type: 'button', 'aria-label': 'Remove', onclick: () => {
+      store.pending = store.pending.filter((y) => y.id !== x.id); writeStore(store); afterPendingChange(x.app);
+    } }, '×'))));
+}
+function saveOffline(app) {
+  const meta = store.meta[app.id], f = OF[app.id];
+  const cur = meta.currencies ? f.currency : meta.base;
+  const amount = calcAmt(f.amount, cur);
+  if (!(amount > 0)) return stoast('Enter a valid amount');
+  if (!f.info.trim()) return stoast('Enter a description');
+  if (!/^\d{4}-\d{2}-\d{2}$/.test(f.date)) return stoast('Pick a date');
+  const e = { date: f.date, info: f.info.trim(), amount, type: f.types[f.kind] };
+  if (f.kind === 'expense') e.category = f.category;
+  if (meta.currencies) e.currency = f.currency;
+  store.pending.push({ id: Date.now().toString(36) + Math.random().toString(36).slice(2, 8), app: app.id, key: f.kind, e });
+  writeStore(store);
+  f.amount = ''; f.info = '';
+  stoast('Saved on this phone ✓');
+  afterPendingChange(app.id);
+}
+function afterPendingChange(appId) {
+  updatePend();
+  const app = APPS.find((a) => a.id === appId);
+  if (app && state[app.id] && state[app.id].offline) showOffline(app);
+  if ($('#settings').classList.contains('show') && $('#settingsCard').dataset.view === 'pending') openPending();
+}
+function updatePend() {
+  const n = store.pending.length, bad = store.pending.filter((x) => x.error).length;
+  const b = $('#pend');
+  b.className = n ? 'show' + (bad ? ' bad' : '') : '';
+  b.textContent = !n ? '' : bad ? bad + ' couldn’t go into your sheet · tap to see' : n + ' waiting to go into your sheet';
+}
+function openPending() {
+  const card = $('#settingsCard');
+  card.dataset.view = 'pending';
+  card.replaceChildren(...[h('h2', null, 'Waiting to sync'),
+    store.pending.length ? APPS.map((a) => { const m = store.pending.filter((x) => x.app === a.id); return m.length ? [h('label', null, a.name), pendingList(m)] : null; })
+      : h('p', null, 'Everything is in your sheet.'),
+    h('div', { class: 'btns one' }, h('button', { class: 'btn', onclick: closeSettings }, 'Close'))].flat(Infinity).filter(Boolean));
+  $('#settings').classList.add('show');
+}
+$('#pend').addEventListener('click', openPending);
+// Hand waiting entries to an app that has just loaded.
+function flushPending(app) {
+  const st = state[app.id];
+  if (!st || !st.win) return;
+  store.pending.filter((x) => x.app === app.id && !x.sent).forEach((x) => {
+    x.sent = true; delete x.error;
+    try { st.win.postMessage({ financeSite: 'add', id: x.id, key: x.key, e: x.e }, '*'); } catch (err) { x.sent = false; }
+  });
+  updatePend();
+}
+function onAppMessage(app, d, source) {
+  const st = state[app.id];
+  if (d.financeApp === 'meta' && d.meta) { store.meta[app.id] = d.meta; writeStore(store); return true; }
+  if (d.financeApp === 'added' || d.financeApp === 'addFailed') {
+    const x = store.pending.find((y) => y.id === d.id);
+    if (!x) return true;
+    if (d.financeApp === 'added') {
+      store.pending = store.pending.filter((y) => y.id !== d.id);
+      if (!store.pending.some((y) => y.app === app.id)) stoast('Offline entries are in your sheet ✓');
+    } else { x.sent = false; x.error = String(d.error || 'Not saved').slice(0, 140); }
+    writeStore(store); afterPendingChange(app.id);
+    return true;
+  }
+  if (d.financeApp === 'ready') { st.win = source; setTimeout(() => flushPending(app), 300); }
+  return false;
+}
+window.addEventListener('online', () => APPS.forEach((a) => { if (state[a.id] && (state[a.id].offline || state[a.id].status !== 'ready')) start(a, true); }));
+window.addEventListener('offline', () => APPS.forEach((a) => { if (state[a.id] && state[a.id].status !== 'ready') showOffline(a); }));
+
 // ---------- settings ----------
 function openSettings() {
   const inputs = {};
   const err = h('p', { class: 'err' });
   const card = $('#settingsCard');
+  card.dataset.view = 'settings';
   card.replaceChildren(...[h('h2', null, 'Settings'),
     APPS.map((app) => {
       inputs[app.id] = h('input', { type: 'url', inputmode: 'url', placeholder: 'https://script.google.com/macros/s/…/exec', value: urlOf(app) });
@@ -465,6 +668,7 @@ if (lockCfg()) showLock('unlock');
 
 window.addEventListener('hashchange', () => { const id = location.hash.slice(1); if (id && id !== current) go(id); });
 go(location.hash.slice(1) || store.last || (APPS[0] && APPS[0].id));
+updatePend();
 
 if ('serviceWorker' in navigator && location.protocol === 'https:') {
   navigator.serviceWorker.register('sw.js').catch(() => {});
