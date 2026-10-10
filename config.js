@@ -6,12 +6,12 @@ window.FINANCE_APPS = [
     id: 'hk',
     name: 'HK Finance',
     badge: 'HK$',
-    url: 'https://script.google.com/macros/s/AKfycbyfG9UgSSNfFUtEfxFw3cIHI-_L_3Bbx4Fdld2PBZFiXGOQGHl-IKIutPxii9w81cv0/exec'
+    url: 'https://script.google.com/macros/s/AKfycbxAIRnGiWp-gVM6teGRL8Az-Ad7xbCCVBd_t56MjfG_NBFACMlDhn5nn8FcEj1WG69Z/exec'
   },
   {
     id: 'idr',
-    name: 'My Finances',
+    name: 'ID Finance',
     badge: 'Rp',
-    url: ''
+    url: 'https://script.google.com/macros/s/AKfycbyh2lbfAP07dMEmEy0jGdDwPvme63pRq3qESLFGqcubbifHPZ-aIw9UmjOf08FsZfSwZw/exec'
   }
 ];

@@ -1,7 +1,7 @@
 {
   "name": "Finance",
   "short_name": "Finance",
-  "description": "HK Finance and My Finances in one app.",
+  "description": "HK Finance and ID Finance in one app.",
   "start_url": "./",
   "scope": "./",
   "display": "standalone",
@@ -15,6 +15,6 @@
   ],
   "shortcuts": [
     { "name": "HK Finance", "url": "./#hk", "icons": [{ "src": "icon-192.png", "sizes": "192x192" }] },
-    { "name": "My Finances", "url": "./#idr", "icons": [{ "src": "icon-192.png", "sizes": "192x192" }] }
+    { "name": "ID Finance", "url": "./#idr", "icons": [{ "src": "icon-192.png", "sizes": "192x192" }] }
   ]
 }
