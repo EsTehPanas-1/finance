@@ -78,7 +78,8 @@
   /* Settings sheet */
   #settings { position: fixed; inset: 0; background: rgba(0,0,0,.45); display: none; align-items: flex-end; justify-content: center; z-index: 10; }
   #settings.show { display: flex; }
-  #settings .card { border-radius: 22px 22px 0 0; max-width: 480px; padding-bottom: calc(24px + env(safe-area-inset-bottom)); text-align: left; }
+  #settings .card { border-radius: 22px 22px 0 0; max-width: 480px; padding-bottom: calc(24px + env(safe-area-inset-bottom)); text-align: left;
+    max-height: calc(100vh - 24px); max-height: calc(100dvh - 24px); overflow-y: auto; overscroll-behavior: contain; }
   #settings label { display: block; font-size: 13px; font-weight: 600; color: var(--muted); margin: 16px 0 8px; }
   #settings h2 { text-align: center; }
   #settings .hint { color: var(--muted); font-size: 13px; margin: 0; }
@@ -109,7 +110,7 @@
   .pitem + .pitem { border-top: 1px dashed var(--line); }
   .pitem small { grid-column: 1 / 3; color: var(--muted); font-size: 12px; }
   .pitem small.bad { color: var(--danger); }
-  .pitem button { grid-column: 3; grid-row: 1 / 3; width: 32px; height: 32px; border: 0; background: none; color: var(--muted); font-size: 20px; border-radius: 8px; }
+  .pitem button { grid-column: 3; grid-row: 1 / 3; width: 32px; height: 32px; border: 0; background: none; color: var(--muted); border-radius: 8px; display: grid; place-items: center; padding: 0; }
   #settings .plist { margin-top: 0; border-top: 0; padding-top: 0; }
   #settings .plist h3 { display: none; }
   #pend { display: none; max-width: 480px; margin: 8px auto 0; width: 100%; height: 32px; border: 1px solid var(--line); background: var(--card);
@@ -118,7 +119,7 @@
   #pend.bad { color: var(--danger); border-color: var(--danger); }
   #stoast { position: fixed; left: 50%; bottom: calc(24px + env(safe-area-inset-bottom)); transform: translateX(-50%); background: var(--ink); color: var(--bg);
     padding: 10px 16px; border-radius: 12px; font-weight: 600; font-size: 14px; opacity: 0; transition: opacity .2s; pointer-events: none; z-index: 15;
-    max-width: calc(100% - 32px); text-align: center; }
+    width: max-content; max-width: calc(100% - 32px); text-align: center; }
   #stoast.show { opacity: 1; }
 
   /* Lock screen */
@@ -257,7 +258,7 @@ window.addEventListener('message', (ev) => {
   const app = APPS.find((a) => state[a.id] && state[a.id].frame && containsWindow(state[a.id].frame.contentWindow, ev.source, 0));
   if (!app) return;
   if (d.financeApp === 'swipe') {
-    if (locked || app.id !== current) return;
+    if (locked || app.id !== current || $('#settings').classList.contains('show')) return;
     const j = APPS.findIndex((a) => a.id === current) + (d.dir === 'left' ? 1 : -1);
     if (j >= 0 && j < APPS.length) go(APPS[j].id);
     return;
@@ -346,10 +347,12 @@ function calcAmt(raw, cur) {
   let r = terms[0]; signs.forEach((op, i) => { r = op === '+' ? r + terms[i + 1] : r - terms[i + 1]; });
   return Number.isFinite(r) ? (cur === 'IDR' ? Math.round(r) : Math.round(r * 100) / 100) : NaN;
 }
+const NF0 = new Intl.NumberFormat('en-US', { maximumFractionDigits: 0 });
+const NF2 = new Intl.NumberFormat('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 2 });
 function fmt(n, cur) {
   const x = Number(n || 0);
-  if (cur === 'IDR') return 'Rp' + Math.round(x).toLocaleString('en-US');
-  return (cur === 'HKD' ? 'HK$' : '$') + x.toLocaleString('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 2 });
+  if (cur === 'IDR') return 'Rp' + NF0.format(Math.round(x));
+  return (cur === 'HKD' ? 'HK$' : '$') + NF2.format(x);
 }
 function ochips(opts, value, pick) {
   const cols = opts.length > 3 ? (opts.length % 3 === 0 ? 3 : 2) : opts.length;
@@ -405,7 +408,7 @@ function pendingList(items) {
     h('small', { class: x.error ? 'bad' : '' }, x.error ? x.error : (x.key === 'income' ? 'Income' : 'Expense') + ' · ' + x.e.date),
     h('button', { type: 'button', 'aria-label': 'Remove', onclick: () => {
       store.pending = store.pending.filter((y) => y.id !== x.id); writeStore(store); afterPendingChange(x.app);
-    } }, '×'))));
+    } }, icon('M7 7l10 10M17 7L7 17', 20)))));
 }
 function saveOffline(app) {
   const meta = store.meta[app.id], f = OF[app.id];
@@ -457,7 +460,11 @@ function flushPending(app) {
 }
 function onAppMessage(app, d, source) {
   const st = state[app.id];
-  if (d.financeApp === 'meta' && d.meta) { store.meta[app.id] = d.meta; writeStore(store); return true; }
+  if (d.financeApp === 'meta' && d.meta) {
+    store.meta[app.id] = d.meta; writeStore(store);
+    if (st.win) flushPending(app);   // e.g. a month you just started: entries that failed for it can go in now
+    return true;
+  }
   if (d.financeApp === 'added' || d.financeApp === 'addFailed') {
     const x = store.pending.find((y) => y.id === d.id);
     if (!x) return true;
@@ -569,7 +576,7 @@ function renderLock(shake) {
   if (setting) left = h('button', { type: 'button', class: 'ok', 'aria-label': 'OK', disabled: L.entry.length < 4, onclick: submitSet }, icon(ICON.ok));
   else left = h('button', { type: 'button', class: 'plain', 'aria-label': 'Use fingerprint', disabled: !(cfg && cfg.cred), onclick: tryBio }, icon(ICON.finger, 30));
   const pad = h('div', { class: 'pad' }, ['1', '2', '3', '4', '5', '6', '7', '8', '9'].map(key), left, key('0'),
-    h('button', { type: 'button', class: 'plain', 'aria-label': 'Delete', onclick: () => { L.entry = L.entry.slice(0, -1); renderLock(); } }, icon(ICON.back)));
+    h('button', { type: 'button', class: 'plain', 'aria-label': 'Delete', onclick: () => { if (!L.checking) { L.entry = L.entry.slice(0, -1); renderLock(); } } }, icon(ICON.back)));
   if (waiting) pad.querySelectorAll('button').forEach((b) => { b.disabled = true; b.style.visibility = 'visible'; b.style.opacity = '.4'; });
   const under = setting
     ? h('button', { type: 'button', class: 'under', onclick: () => { hideLock(); } }, 'Cancel')
@@ -581,13 +588,15 @@ function renderLock(shake) {
       ' → Delete data. Your sheets aren\'t affected; you\'ll just need to set the lock up again.') : null].filter(Boolean));
 }
 async function press(d) {
-  if (Date.now() < L.until || L.entry.length >= 6) return;
+  if (L.checking || Date.now() < L.until || L.entry.length >= 6) return;
   L.entry += d; L.msg = ''; L.bad = false;
   renderLock();
   const cfg = lockCfg();
   if (L.mode === 'unlock' && cfg && L.entry.length === cfg.len) {
-    const tryPin = L.entry;
-    if (await pinHash(tryPin, cfg.salt) === cfg.hash) { L.fails = 0; hideLock(); return; }
+    L.checking = true;
+    let ok = false;
+    try { ok = await pinHash(L.entry, cfg.salt) === cfg.hash; } finally { L.checking = false; }
+    if (ok) { L.fails = 0; hideLock(); return; }
     L.fails++; L.entry = ''; L.bad = true;
     if (L.fails >= 5) {
       L.fails = 0; L.until = Date.now() + 30000; L.msg = 'Too many tries. Wait 30 seconds.';
@@ -618,6 +627,7 @@ async function tryBio() {
   bioBusy = false; unlockedAt = Date.now();
 }
 async function enrolBio() {
+  bioBusy = true;   // the phone's fingerprint prompt hides the page for a moment: don't lock because of that
   try {
     const cred = await navigator.credentials.create({ publicKey: {
       challenge: rand(32), rp: { name: 'Finance' },
@@ -627,7 +637,7 @@ async function enrolBio() {
       timeout: 60000 } });
     store.lock.cred = b64(cred.rawId); writeStore(store);
   } catch (e) { /* cancelled */ }
-  unlockedAt = Date.now();
+  bioBusy = false; unlockedAt = Date.now();
   openSettings();
 }
 function lockSettings() {
@@ -661,7 +671,7 @@ document.addEventListener('visibilitychange', () => {
 document.addEventListener('keydown', (e) => {
   if (!$('#lock').classList.contains('show')) return;
   if (/^\d$/.test(e.key)) press(e.key);
-  else if (e.key === 'Backspace') { L.entry = L.entry.slice(0, -1); renderLock(); }
+  else if (e.key === 'Backspace' && !L.checking) { L.entry = L.entry.slice(0, -1); renderLock(); }
   else if (e.key === 'Enter' && L.mode !== 'unlock') submitSet();
 });
 if (lockCfg()) showLock('unlock');
