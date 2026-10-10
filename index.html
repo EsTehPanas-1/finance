@@ -1,0 +1,273 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>Finance</title>
+<meta name="theme-color" content="#eef1ee" media="(prefers-color-scheme: light)">
+<meta name="theme-color" content="#0f1513" media="(prefers-color-scheme: dark)">
+<link rel="manifest" href="manifest.webmanifest">
+<link rel="icon" href="favicon.png">
+<link rel="apple-touch-icon" href="apple-touch-icon.png">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="mobile-web-app-capable" content="yes">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@500;600;700;800&display=swap" rel="stylesheet">
+<style>
+  :root {
+    --bg: #eef1ee; --card: #ffffff; --ink: #15201c; --muted: #66736d; --line: #dce2de; --soft: #f4f6f4;
+    --accent: #1f6f5c; --accent-ink: #ffffff; --danger: #b3261e;
+    --font: "Plus Jakarta Sans", -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
+  }
+  @media (prefers-color-scheme: dark) {
+    :root { --bg: #0f1513; --card: #18201d; --ink: #e9efec; --muted: #8e9a95; --line: #2a3430; --soft: #1d2622;
+      --accent: #4fb89d; --accent-ink: #06201a; --danger: #f2877f; }
+  }
+  * { box-sizing: border-box; -webkit-tap-highlight-color: transparent; }
+  html, body { height: 100%; margin: 0; }
+  body { background: var(--bg); color: var(--ink); font: 500 16px/1.45 var(--font); overflow: hidden;
+    display: grid; grid-template-rows: auto 1fr; }
+  button, input { font: inherit; color: inherit; }
+  button { cursor: pointer; }
+  :focus-visible { outline: 2px solid var(--accent); outline-offset: 2px; }
+
+  /* Top bar: the two pages as one segmented switch, settings on the right, balanced by a spacer */
+  .bar { padding: calc(8px + env(safe-area-inset-top)) 16px 8px; background: var(--bg); border-bottom: 1px solid var(--line); }
+  .bar .in { max-width: 480px; margin: 0 auto; display: grid; grid-template-columns: 1fr 44px; gap: 8px; align-items: center; }
+  .tabs { display: grid; grid-template-columns: 1fr 1fr; gap: 4px; padding: 4px; background: var(--card);
+    border: 1px solid var(--line); border-radius: 14px; }
+  .tabs button { height: 36px; padding: 0 6px; border: 0; background: none; border-radius: 10px; font-weight: 700; font-size: 14px;
+    display: flex; align-items: center; justify-content: center; gap: 6px; min-width: 0; white-space: nowrap;
+    transition: background-color .2s, color .2s; }
+  .tabs button span { font-size: 11px; font-weight: 800; padding: 1px 6px; border-radius: 6px; background: var(--soft); color: var(--muted);
+    transition: background-color .2s, color .2s; }
+  .tabs button.on { background: var(--accent); color: var(--accent-ink); }
+  .tabs button.on span { background: rgba(255,255,255,.2); color: var(--accent-ink); }
+  .gear { width: 44px; height: 44px; border-radius: 12px; border: 1px solid var(--line); background: var(--card); color: var(--muted);
+    display: grid; place-items: center; padding: 0; }
+
+  /* Pages: each app stays loaded, so switching is instant */
+  main { position: relative; min-height: 0; }
+  .page { position: absolute; inset: 0; visibility: hidden; }
+  .page.on { visibility: visible; }
+  .page iframe { width: 100%; height: 100%; border: 0; display: block; background: var(--bg); }
+
+  /* Cards for setup / problems */
+  .cover { position: absolute; inset: 0; display: grid; place-items: center; padding: 24px 16px; background: var(--bg); overflow: auto; }
+  .card { width: 100%; max-width: 420px; background: var(--card); border: 1px solid var(--line); border-radius: 22px; padding: 24px; text-align: center; }
+  .card h2 { font-size: 18px; margin: 0 0 8px; }
+  .card p { color: var(--muted); font-size: 14px; margin: 0 0 12px; }
+  .card ol { text-align: left; color: var(--muted); font-size: 14px; padding-left: 20px; margin: 0 0 16px; }
+  .card input { width: 100%; height: 48px; border: 1px solid var(--line); background: var(--soft); border-radius: 12px; padding: 0 14px; font-size: 14px; font-weight: 600; }
+  .card input:focus { outline: none; border-color: var(--accent); background: var(--card); }
+  .btns { display: grid; grid-template-columns: 1fr 1fr; gap: 8px; margin-top: 12px; }
+  .btns.one { grid-template-columns: 1fr; }
+  .btn { height: 46px; border-radius: 12px; border: 1px solid var(--line); background: var(--soft); font-weight: 700; display: grid; place-items: center; text-decoration: none; color: var(--ink); }
+  .btn.primary { background: var(--accent); border-color: var(--accent); color: var(--accent-ink); }
+  .err { color: var(--danger); font-size: 13px; min-height: 18px; margin: 8px 0 0; }
+  .spin { width: 28px; height: 28px; border-radius: 50%; border: 3px solid var(--line); border-top-color: var(--accent); margin: 0 auto 12px; animation: spin 0.9s linear infinite; }
+  @keyframes spin { to { transform: rotate(360deg); } }
+  @media (prefers-reduced-motion: reduce) { * { transition: none !important; animation-duration: 3s !important; } }
+
+  /* Settings sheet */
+  #settings { position: fixed; inset: 0; background: rgba(0,0,0,.45); display: none; align-items: flex-end; justify-content: center; z-index: 10; }
+  #settings.show { display: flex; }
+  #settings .card { border-radius: 22px 22px 0 0; max-width: 480px; padding-bottom: calc(24px + env(safe-area-inset-bottom)); text-align: left; }
+  #settings label { display: block; font-size: 13px; font-weight: 600; color: var(--muted); margin: 16px 0 8px; }
+  #settings h2 { text-align: center; }
+  #settings .open { font-size: 13px; font-weight: 600; color: var(--accent); text-decoration: none; display: inline-block; margin-top: 6px; }
+</style>
+</head>
+<body>
+<div class="bar"><div class="in">
+  <div class="tabs" role="tablist" id="tabs"></div>
+  <button class="gear" id="gearBtn" aria-label="Settings" title="Settings">
+    <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><circle cx="12" cy="12" r="3"/><path d="M19.4 15a1.65 1.65 0 0 0 .33 1.82l.06.06a2 2 0 1 1-2.83 2.83l-.06-.06a1.65 1.65 0 0 0-1.82-.33 1.65 1.65 0 0 0-1 1.51V21a2 2 0 1 1-4 0v-.09A1.65 1.65 0 0 0 9 19.4a1.65 1.65 0 0 0-1.82.33l-.06.06a2 2 0 1 1-2.83-2.83l.06-.06A1.65 1.65 0 0 0 4.68 15a1.65 1.65 0 0 0-1.51-1H3a2 2 0 1 1 0-4h.09A1.65 1.65 0 0 0 4.6 9a1.65 1.65 0 0 0-.33-1.82l-.06-.06a2 2 0 1 1 2.83-2.83l.06.06A1.65 1.65 0 0 0 9 4.68a1.65 1.65 0 0 0 1-1.51V3a2 2 0 1 1 4 0v.09a1.65 1.65 0 0 0 1 1.51 1.65 1.65 0 0 0 1.82-.33l.06-.06a2 2 0 1 1 2.83 2.83l-.06.06A1.65 1.65 0 0 0 19.4 9a1.65 1.65 0 0 0 1.51 1H21a2 2 0 1 1 0 4h-.09a1.65 1.65 0 0 0-1.51 1z"/></svg>
+  </button>
+</div></div>
+<main id="pages"></main>
+<div id="settings" role="dialog" aria-modal="true" aria-label="Settings"><div class="card" id="settingsCard"></div></div>
+
+<script src="config.js"></script>
+<script>
+const APPS = window.FINANCE_APPS || [];
+const STORE = 'finance-site-v1';
+const LOAD_TIMEOUT = 20000;
+const $ = (s) => document.querySelector(s);
+function h(tag, attrs, ...kids) {
+  const e = document.createElement(tag);
+  for (const k in (attrs || {})) {
+    const v = attrs[k];
+    if (k === 'class') e.className = v;
+    else if (k.startsWith('on')) e.addEventListener(k.slice(2), v);
+    else if (v !== false && v != null) e.setAttribute(k, v === true ? '' : v);
+  }
+  kids.flat(Infinity).forEach((c) => { if (c != null) e.append(c.nodeType ? c : document.createTextNode(c)); });
+  return e;
+}
+
+// Saved on this phone: links you pasted and the page you used last.
+function readStore() { try { return JSON.parse(localStorage.getItem(STORE) || '{}') || {}; } catch (e) { return {}; } }
+function writeStore(v) { try { localStorage.setItem(STORE, JSON.stringify(v)); } catch (e) { /* storage off: fine */ } }
+const store = readStore();
+store.urls = store.urls || {};
+const urlOf = (app) => store.urls[app.id] || app.url || '';
+const validUrl = (u) => /^https:\/\/script\.google\.com\/(a\/[^/]+\/)?macros\/s\/[\w-]+\/exec\/?$/.test(String(u).trim());
+
+// ---------- pages ----------
+const state = {};   // id -> { page, frame, status: 'none' | 'loading' | 'ready', timer }
+let current = null;
+
+function buildTabs() {
+  $('#tabs').replaceChildren(...APPS.map((app) => h('button', {
+    role: 'tab', 'aria-selected': String(app.id === current), class: app.id === current ? 'on' : '',
+    onclick: () => go(app.id)
+  }, app.name, h('span', null, app.badge))));
+}
+
+function go(id) {
+  if (!APPS.some((a) => a.id === id)) id = APPS[0].id;
+  current = id;
+  store.last = id; writeStore(store);
+  if (location.hash !== '#' + id) history.replaceState(null, '', '#' + id);
+  buildTabs();
+  APPS.forEach((app) => {
+    ensurePage(app);
+    state[app.id].page.classList.toggle('on', app.id === id);
+  });
+  start(APPS.find((a) => a.id === id));
+  // Load the other page quietly once this one is up, so switching later is instant.
+  setTimeout(() => APPS.forEach((a) => { if (a.id !== id) start(a); }), 2500);
+}
+
+function ensurePage(app) {
+  if (state[app.id]) return;
+  const page = h('section', { class: 'page', role: 'tabpanel', 'aria-label': app.name });
+  $('#pages').append(page);
+  state[app.id] = { page, frame: null, status: 'none', timer: null };
+}
+
+// Opens the app inside its page (once).
+function start(app, force) {
+  const st = state[app.id];
+  const url = urlOf(app);
+  if (!validUrl(url)) { showSetup(app); return; }
+  if (st.frame && !force) return;
+  st.page.replaceChildren();
+  st.status = 'none';
+  const frame = h('iframe', { src: url.trim(), title: app.name, allow: 'clipboard-write', referrerpolicy: 'no-referrer-when-downgrade' });
+  const cover = h('div', { class: 'cover' }, h('div', { class: 'card' }, h('div', { class: 'spin' }), h('p', { style: 'margin:0' }, 'Opening ' + app.name + '…')));
+  st.frame = frame;
+  st.cover = cover;
+  st.page.append(frame, cover);
+  // The app itself shows "Loading your sheet…"; keep our cover only briefly in case Google shows nothing.
+  frame.addEventListener('load', () => { setTimeout(() => { if (st.cover === cover && st.status !== 'none') hideCover(st); }, 0); });
+  clearTimeout(st.timer);
+  st.timer = setTimeout(() => { if (st.frame === frame && st.status === 'none') showProblem(app); }, LOAD_TIMEOUT);
+}
+function hideCover(st) { if (st.cover) { st.cover.remove(); st.cover = null; } }
+
+// The app tells us when it is running inside the page (it sends { financeApp: 'loading' | 'ready' }).
+function containsWindow(win, target, depth) {
+  if (!win) return false;
+  if (win === target) return true;
+  if (depth > 4) return false;
+  try { for (let i = 0; i < win.frames.length; i++) if (containsWindow(win.frames[i], target, depth + 1)) return true; } catch (e) { /* ignore */ }
+  return false;
+}
+window.addEventListener('message', (ev) => {
+  const d = ev.data;
+  if (!d || typeof d !== 'object' || !d.financeApp) return;
+  const app = APPS.find((a) => state[a.id] && state[a.id].frame && containsWindow(state[a.id].frame.contentWindow, ev.source, 0));
+  if (!app) return;
+  const st = state[app.id];
+  st.status = d.financeApp === 'ready' ? 'ready' : (st.status === 'ready' ? 'ready' : 'loading');
+  clearTimeout(st.timer);
+  hideCover(st);
+});
+
+function showSetup(app) {
+  const st = state[app.id];
+  st.frame = null; st.status = 'none';
+  const input = h('input', { type: 'url', inputmode: 'url', placeholder: 'https://script.google.com/macros/s/…/exec', autocomplete: 'off', value: urlOf(app) });
+  const err = h('p', { class: 'err' });
+  const save = () => {
+    const v = input.value.trim();
+    if (!validUrl(v)) { err.textContent = 'That doesn\'t look like a web app link. It should start with https://script.google.com/macros/s/ and end with /exec.'; return; }
+    store.urls[app.id] = v; writeStore(store);
+    start(app, true);
+  };
+  input.addEventListener('keydown', (e) => { if (e.key === 'Enter') save(); });
+  st.page.replaceChildren(h('div', { class: 'cover' }, h('div', { class: 'card' },
+    h('h2', null, 'Connect ' + app.name),
+    h('p', null, 'Paste the web app link of your ' + app.name + ' sheet.'),
+    h('ol', null,
+      h('li', null, 'Open the sheet, then Extensions → Apps Script.'),
+      h('li', null, 'Deploy → Manage deployments.'),
+      h('li', null, 'Copy the Web app URL (it ends in /exec).')),
+    input, err,
+    h('div', { class: 'btns one' }, h('button', { class: 'btn primary', onclick: save }, 'Save')))));
+}
+
+function showProblem(app) {
+  const st = state[app.id];
+  const url = urlOf(app).trim();
+  st.page.querySelectorAll('.cover').forEach((c) => c.remove());
+  st.cover = h('div', { class: 'cover' }, h('div', { class: 'card' },
+    h('h2', null, app.name + ' didn\'t open here'),
+    h('p', null, 'Usually one of these:'),
+    h('ol', null,
+      h('li', null, 'You\'re not signed in to Google in this browser. Tap "Open directly", sign in, then come back and tap "Try again".'),
+      h('li', null, 'The latest Code.gs (with the line that allows this site) isn\'t deployed yet: Deploy → Manage deployments → ✎ → New version → Deploy.'),
+      h('li', null, 'The link is wrong. Check it under ⚙.')),
+    h('div', { class: 'btns' },
+      h('a', { class: 'btn', href: url, target: '_blank', rel: 'noopener' }, 'Open directly'),
+      h('button', { class: 'btn primary', onclick: () => start(app, true) }, 'Try again'))));
+  st.page.append(st.cover);
+}
+
+// ---------- settings ----------
+function openSettings() {
+  const inputs = {};
+  const err = h('p', { class: 'err' });
+  const card = $('#settingsCard');
+  card.replaceChildren(...[h('h2', null, 'Settings'),
+    APPS.map((app) => {
+      inputs[app.id] = h('input', { type: 'url', inputmode: 'url', placeholder: 'https://script.google.com/macros/s/…/exec', value: urlOf(app) });
+      return [h('label', null, app.name + ' link'), inputs[app.id],
+        validUrl(urlOf(app)) ? h('a', { class: 'open', href: urlOf(app).trim(), target: '_blank', rel: 'noopener' }, 'Open ' + app.name + ' directly ↗') : null];
+    }),
+    err,
+    h('div', { class: 'btns' },
+      h('button', { class: 'btn', onclick: closeSettings }, 'Close'),
+      h('button', { class: 'btn primary', onclick: () => {
+        for (const app of APPS) {
+          const v = inputs[app.id].value.trim();
+          if (v && !validUrl(v)) { err.textContent = app.name + ': that doesn\'t look like a web app link (…/exec).'; return; }
+        }
+        APPS.forEach((app) => {
+          const v = inputs[app.id].value.trim();
+          const before = urlOf(app);
+          if (v && v !== app.url) store.urls[app.id] = v; else delete store.urls[app.id];
+          if (urlOf(app) !== before || !state[app.id].frame) { state[app.id].frame = null; start(app, true); }
+        });
+        writeStore(store);
+        closeSettings();
+      } }, 'Save'))].flat(Infinity).filter(Boolean));
+  $('#settings').classList.add('show');
+}
+function closeSettings() { $('#settings').classList.remove('show'); }
+$('#gearBtn').addEventListener('click', openSettings);
+$('#settings').addEventListener('click', (e) => { if (e.target.id === 'settings') closeSettings(); });
+document.addEventListener('keydown', (e) => { if (e.key === 'Escape') closeSettings(); });
+
+window.addEventListener('hashchange', () => { const id = location.hash.slice(1); if (id && id !== current) go(id); });
+go(location.hash.slice(1) || store.last || (APPS[0] && APPS[0].id));
+
+if ('serviceWorker' in navigator && location.protocol === 'https:') {
+  navigator.serviceWorker.register('sw.js').catch(() => {});
+}
+</script>
+</body>
+</html>
