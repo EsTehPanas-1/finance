@@ -11,6 +11,7 @@
 <link rel="apple-touch-icon" href="apple-touch-icon.png">
 <meta name="apple-mobile-web-app-capable" content="yes">
 <meta name="mobile-web-app-capable" content="yes">
+<link rel="preconnect" href="https://script.google.com">
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@500;600;700;800&display=swap" rel="stylesheet">
@@ -212,7 +213,7 @@ function go(id) {
   });
   start(APPS.find((a) => a.id === id));
   // Load the other page quietly once this one is up, so switching later is instant.
-  setTimeout(() => APPS.forEach((a) => { if (a.id !== id) start(a); }), 2500);
+  if (!go.bg) go.bg = setTimeout(() => APPS.forEach((a) => { if (a.id !== current) start(a); }), 2500);
 }
 
 function ensurePage(app) {
