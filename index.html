@@ -14,7 +14,7 @@
 <link rel="preconnect" href="https://script.google.com">
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-<link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@500;600;700;800&display=swap" rel="stylesheet">
+<link rel="preload" as="style" href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@500;600;700;800&display=swap" onload="this.onload=null;this.rel='stylesheet'">
 <style>
   :root {
     --bg: #eef1ee; --card: #ffffff; --ink: #15201c; --muted: #66736d; --line: #dce2de; --soft: #f4f6f4;
@@ -212,10 +212,14 @@ function go(id) {
     if (app.id === id && from >= 0 && from !== to) { void pg.offsetWidth; pg.classList.add(to > from ? 'from-right' : 'from-left'); }
   });
   start(APPS.find((a) => a.id === id));
-  // Load the other page quietly once this one is up, so switching later is instant.
-  if (!go.bg) go.bg = setTimeout(() => APPS.forEach((a) => { if (a.id !== current) start(a); }), 2500);
+  // The other app loads quietly once this one is up (so they don't compete on a phone), or after 8 s at the latest.
+  if (!go.bg) go.bg = true, loadOthers(8000);
 }
 
+function loadOthers(ms) {
+  clearTimeout(loadOthers.t);
+  loadOthers.t = setTimeout(() => APPS.forEach((a) => { if (a.id !== current) start(a); }), ms);
+}
 function ensurePage(app) {
   if (state[app.id]) return;
   const page = h('section', { class: 'page', role: 'tabpanel', 'aria-label': app.name });
@@ -266,6 +270,7 @@ window.addEventListener('message', (ev) => {
   }
   if (onAppMessage(app, d, ev.source)) return;
   const st = state[app.id];
+  if (d.financeApp === 'ready' && st.status !== 'ready' && app.id === current) loadOthers(1000);
   st.status = d.financeApp === 'ready' ? 'ready' : (st.status === 'ready' ? 'ready' : 'loading');
   clearTimeout(st.timer);
   hideCover(st);
