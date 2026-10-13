@@ -262,12 +262,6 @@ window.addEventListener('message', (ev) => {
   if (!d || typeof d !== 'object' || !d.financeApp) return;
   const app = APPS.find((a) => state[a.id] && state[a.id].frame && containsWindow(state[a.id].frame.contentWindow, ev.source, 0));
   if (!app) return;
-  if (d.financeApp === 'swipe') {
-    if (locked || app.id !== current || $('#settings').classList.contains('show')) return;
-    const j = APPS.findIndex((a) => a.id === current) + (d.dir === 'left' ? 1 : -1);
-    if (j >= 0 && j < APPS.length) go(APPS[j].id);
-    return;
-  }
   if (onAppMessage(app, d, ev.source)) return;
   const st = state[app.id];
   if (d.financeApp === 'ready' && st.status !== 'ready' && app.id === current) loadOthers(1000);
